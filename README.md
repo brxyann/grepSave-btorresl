@@ -1,60 +1,65 @@
-# GrepSave-btorresl
-
-A custom command-line utility built in Node.js that combines the search capabilities of Linux `grep` with the simultaneous split-output behavior of `tee`.
-
----
+# GrepSave (grep + tee)
 
 ## Section 1 — Command Description
+GrepSave combines `grep` and `tee` into a single Node.js command-line tool[cite: 1, 4]. It searches a text file line-by-line for a specific word, prints matching lines to the terminal, and saves them to an output file at the same time[cite: 4].
 
-### What It Does
-`GrepSave` searches a target text file line-by-line for a specific string or word. When matches are found, it performs two actions at once:
-1. Streams matching lines live to the terminal console (like `grep`).
-2. Saves all matching lines to an output text file on disk (like `tee`).
+### How to Run
+```bash
+node grepSave_btorresl2026.js <word> <inputFile> [outputFile]
+```
 
-The tool includes input validation to prevent crashes if command arguments are missing, checks that the source file exists before attempting to read it, and provides a default filename fallback if no custom output file is specified.
+### Examples
+* Save to custom file: `node grepSave_btorresl2026.js the tvShow.txt results.txt`[cite: 4]
+* Save to default file: `node grepSave_btorresl2026.js the tvShow.txt`[cite: 4]
 
-### Combined Commands
-* **`grep`**: Filters lines in a file based on matching search text.
-* **`tee`**: Directs output to both standard output (screen) and a file at the same time.
+### Source Code
+```javascript
+// GREP and SAVE
+const fs = require('fs');
 
-### How to Run It
-Run the script using Node.js with the following syntax:
+let targetWord = process.argv[2];
+let targetFile = process.argv[3];
+let saveFile = process.argv[4];
 
-\`\`\`bash
-node example.js <targetWord> <targetFile> [saveFile]
-\`\`\`
+// Check for missing arguments
+if (!targetWord || !targetFile) {
+  console.log('\nArguments are missing. Try this format:');
+  console.log('node grepSave_btorresl2026.js <targetWord> <targetFile> <saveFile>\n');
+  process.exit(1);
+}
 
-#### Examples
-* **Search and save to a custom file:**
-  \`\`\`bash
-  node example.js drama tvShow.txt results.txt
-  \`\`\`
-* **Search and save to the default file (`defaultSaveFile.txt`):**
-  \`\`\`bash
-  node example.js comedy tvShow.txt
-  \`\`\`
+// Default save file fallback
+if (!saveFile) {
+  saveFile = 'defaultSaveFile.txt';
+}
+
+// Verify file exists
+if (fs.existsSync(targetFile) === false) {
+  console.log("Error: the file '" + targetFile + "' does not exist.");
+  process.exit(1);
+}
+
+const currentFile = fs.readFileSync(targetFile, 'utf-8');
+let matchingLines = [];
+
+// Search lines (grep)
+let lines = currentFile.split('\n');
+for (let line of lines) {
+  if (line.includes(targetWord)) {
+    console.log(line);
+    matchingLines.push(line);
+  }
+}
+
+// Write to file (tee)
+fs.writeFileSync(saveFile, matchingLines.join('\n') + '\n');
+console.log("\nResults saved to: " + saveFile + '\n');
+```
 
 ---
 
 ## Section 2 — AI-Assisted Programming
-
-### What I Asked AI
-* How to use `process.argv` to parse command-line arguments.
-* What methods exist in the Node.js `fs` module to check if a file exists before reading.
-* How to identify test scenarios and edge cases for the command.
-* Why my output file only saved one matching line instead of all matches.
-
-### Where AI Helped
-* **Identifying edge cases:** AI pointed out that omitting optional arguments could break the script, which led to adding the `defaultSaveFile.txt` fallback and an initial argument-count check.
-* **Error prevention:** AI highlighted that attempting to read a non-existent file triggers an uncaught `ENOENT` error, guiding the implementation of `fs.existsSync()`.
-* **String reconstruction:** AI explained that `.split('\n')` removes newline characters, helping identify why lines clumped together and how `.join('\n') + '\n'` cleanly restores line endings.
-
-### Where I Had to Think Independently
-* **Designing the tool concept:** Deciding to combine `grep` and `tee` into a single file search-and-save utility.
-* **Logic implementation:** Choosing to accumulate matching lines in an array using `.push()` during iteration rather than repeatedly writing to disk.
-* **Debugging variable scope:** Noticing variable reference issues (such as catching a mismatched variable name in the existence check) and ensuring exit codes like `process.exit(1)` were placed properly.
-
-### What AI Got Wrong or Missed
-* **Generating too much code initially:** AI initially tended to generate complete blocks of solution code rather than guiding me through writing the logic step-by-step.
-* **Overly complex documentation:** Early suggestions for project specifications and documentation were overly verbose and academic for an introductory assignment, requiring me to simplify the explanations to match course scope.
-* **Loop write behavior:** When discussing saving to disk, early loops using `writeFileSync` kept wiping previous matches, requiring a shift in strategy to buffer matches in memory before writing.
+* **What I asked AI:** How to read command-line arguments using `process.argv`, how to check if a file exists before reading it, and what edge cases to test[cite: 4].
+* **Where AI helped:** Reminded me to check `fs.existsSync` to avoid crashes, suggested a default fallback save file, and explained that `.join('\n') + '\n'` was needed to keep newlines intact[cite: 4].
+* **Where I thought independently:** Picked the idea to combine `grep` and `tee`, chose to store matches in an array using `.push()` instead of writing during the loop, and fixed placement errors with `process.exit(1)`[cite: 1, 4].
+* **What AI got wrong or missed:** It gave overly complex explanations at first, and earlier loops using `writeFileSync` kept overwriting previous matches instead of saving them all[cite: 4].
